@@ -1,47 +1,38 @@
 import * as core from '@actions/core'
 import * as github from '@actions/github'
-import {HttpClient} from '@actions/http-client'
-import {exec, getInput, getYamlInput, run} from './lib/actions.js'
-// see https://github.com/actions/toolkit for more github actions libraries
-import {z} from 'zod'
+import {run} from './lib/actions.js'
 import {fileURLToPath} from 'url'
 
 export const action = () => run(async () => {
-  const context = github.context
   const inputs = {
-    token: getInput('token', {required: true})!,
-    string: getInput('stringInput'),
-    yaml: z.optional(z.array(z.string())).default([])
-        .parse(getYamlInput('yamlInput')),
+    redact: core.getInput('redact')?.split(',')?.map((it) => it.trim()) ?? [],
   }
-  const octokit = github.getOctokit(inputs.token)
 
-  await octokit.rest.issues.create({
-    owner: context.repo.owner,
-    repo: context.repo.repo,
-    title: 'New issue',
-    body: 'This is a new issue',
-  })
+  let eventInputs
+  switch (github.context.eventName) {
+    case 'repository_dispatch':
+      eventInputs = github.context.payload.client_payload
+      break
+    case 'workflow_dispatch':
+    default:
+      eventInputs = github.context.payload.inputs
+  }
 
-  const httpClient = new HttpClient()
-  httpClient.get('https://api.github.com').then((response) => {
-    core.info(`HTTP response: ${response.message.statusCode}`)
-  })
+  if (eventInputs) {
+    core.setOutput('inputs', eventInputs)
+    core.info('Inputs:')
+    for (const [key, value] of Object.entries(eventInputs)) {
+      if (inputs.redact.includes(key)) {
+        core.info(`  ${key}: ***`)
+      } else {
+        core.info(`  ${key}: ${JSON.stringify(value)}`)
+      }
 
-  const result = await exec('echo', ['Hello world!'])
-      .then(({stdout}) => stdout.toString())
-
-  // core.setSecret(value) will mask the value in logs
-  core.setSecret('secretXXX')
-  core.info(result)
-
-  core.startGroup('Group title')
-  core.info(result)
-  core.endGroup()
-
-  // core.setFailed('This is a failure')
-  // core.setOutput(key,value) will set the value of an output
-  core.setOutput('stringOutput', result)
+      core.setOutput(key, value)
+    }
+  } else {
+    core.info('No inputs.')
+  }
 })
 
 // Execute the action, if running as main module

@@ -1,23 +1,14 @@
-name: 'CHANGE ME'
+name: 'Event Inputs'
 description: 'CHANGE ME'
-author: 'CHANGE ME'
+author: 'qoomon'
 branding:
   icon: box
   color: blue
 
 inputs:
-  token:
-    description: 'A GitHub access token'
-    required: true
-    default: '${{ github.token }}'
-  stringInput:
-    description: 'An arbitrary string'
-  yamlInput:
-    description: 'An arbitrary yaml object'
-
-outputs:
-  stringOutput:
-    description: 'An arbitrary string'
+  redact:
+    description: 'Comma separated list of input keys to be redacted'
+    required: false
 
 runs:
   using: 'node20'
