@@ -31,9 +31,16 @@ export const action = () => run(async () => {
     core.info('Inputs:')
     for (const [key, value] of Object.entries(eventInputs)) {
       if (inputs.redact.some((redactPattern) => {
-        if (typeof redactPattern === 'string') return key === redactPattern
+        if (typeof redactPattern === 'string'){
+          return key === redactPattern
+        }
         return redactPattern.test(key)
       })) {
+        if (typeof value === 'string') {
+          core.setSecret(value)
+        } else if (typeof value === 'number') {
+          core.setSecret(value.toString())
+        }
         core.info(`  ${key}: ***`)
       } else {
         core.info(`  ${key}: ${JSON.stringify(value)}`)

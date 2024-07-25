@@ -40715,10 +40715,17 @@ const action = () => run(async () => {
         lib_core.info('Inputs:');
         for (const [key, value] of Object.entries(eventInputs)) {
             if (inputs.redact.some((redactPattern) => {
-                if (typeof redactPattern === 'string')
+                if (typeof redactPattern === 'string') {
                     return key === redactPattern;
+                }
                 return redactPattern.test(key);
             })) {
+                if (typeof value === 'string') {
+                    lib_core.setSecret(value);
+                }
+                else if (typeof value === 'number') {
+                    lib_core.setSecret(value.toString());
+                }
                 lib_core.info(`  ${key}: ***`);
             }
             else {
