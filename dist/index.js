@@ -40691,7 +40691,15 @@ var external_url_ = __nccwpck_require__(7310);
 
 const action = () => run(async () => {
     const inputs = {
-        redact: lib_core.getInput('redact')?.split(',')?.map((it) => it.trim()) ?? [],
+        redact: lib_core.getInput('redact')
+            ?.split(/\s*[,\n]\s*/)
+            ?.map((it) => {
+            const regexMatch = it.match(/^\/(?<pattern>.+)\/(?<flags>[igmd]*)/);
+            if (regexMatch) {
+                return new RegExp(regexMatch.groups?.pattern ?? '', regexMatch.groups?.flags);
+            }
+            return it;
+        }) ?? [],
     };
     let eventInputs;
     switch (github.context.eventName) {
@@ -40706,7 +40714,11 @@ const action = () => run(async () => {
         lib_core.setOutput('inputs', eventInputs);
         lib_core.info('Inputs:');
         for (const [key, value] of Object.entries(eventInputs)) {
-            if (inputs.redact.includes(key)) {
+            if (inputs.redact.some((redactPattern) => {
+                if (typeof redactPattern === 'string')
+                    return key === redactPattern;
+                return redactPattern.test(key);
+            })) {
                 lib_core.info(`  ${key}: ***`);
             }
             else {
