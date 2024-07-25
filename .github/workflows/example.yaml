@@ -18,6 +18,5 @@ jobs:
         id: inputs
         with:
           redact: /val.*/
-      - run: echo '${{ toJson(inputs) }}'
-      - run: echo '${{ toJson(steps.inputs.outputs.inputs) }}'
+      - run: echo '${{ toJson(steps.inputs.outputs) }}'
 
