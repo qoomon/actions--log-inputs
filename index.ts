@@ -5,7 +5,15 @@ import {fileURLToPath} from 'url'
 
 export const action = () => run(async () => {
   const inputs = {
-    redact: core.getInput('redact')?.split(',')?.map((it) => it.trim()) ?? [],
+    redact: core.getInput('redact')?.split(',')
+        ?.map((it) => it.trim())
+        ?.map((it) => {
+          const regexMatch = it.match(/^\/(?<pattern>.+)\/(?<flags>[igmd]*)/)
+          if (regexMatch) {
+            return new RegExp(regexMatch.groups?.pattern ?? '', regexMatch.groups?.flags)
+          }
+          return it
+        }) ?? [],
   }
 
   let eventInputs
@@ -22,7 +30,12 @@ export const action = () => run(async () => {
     core.setOutput('inputs', eventInputs)
     core.info('Inputs:')
     for (const [key, value] of Object.entries(eventInputs)) {
-      if (inputs.redact.includes(key)) {
+      if (inputs.redact.some((redactPattern) => {
+        if (typeof redactPattern === 'string') {
+          return key === redactPattern
+        }
+        return redactPattern.test(key)
+      })) {
         core.info(`  ${key}: ***`)
       } else {
         core.info(`  ${key}: ${JSON.stringify(value)}`)
