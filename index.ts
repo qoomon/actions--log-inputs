@@ -27,31 +27,49 @@ export const action = () => run(async () => {
   }
 
   if (eventInputs) {
-    core.setOutput('inputs', eventInputs)
     core.info('Inputs:')
     for (const [key, value] of Object.entries(eventInputs)) {
-      if (inputs.redact.some((redactPattern) => {
-        if (typeof redactPattern === 'string'){
-          return key === redactPattern
-        }
-        return redactPattern.test(key)
-      })) {
-        if (typeof value === 'string') {
-          core.setSecret(value)
-        } else if (typeof value === 'number') {
+      if (key === '') continue
+      if (keyValueShouldBeRedacted(key)) {
+        core.info(`  ${key}: ***`)
+        if (isPrimitive(value)) {
           core.setSecret(value.toString())
         }
-        core.info(`  ${key}: ***`)
       } else {
         core.info(`  ${key}: ${JSON.stringify(value)}`)
       }
-
       core.setOutput(key, value)
     }
   } else {
     core.info('No inputs.')
   }
+
+  /**
+   * Check if key should be redacted
+   * @param key - key to check
+   * @return true if key should be redacted
+   */
+  function keyValueShouldBeRedacted(key: string) {
+    return inputs.redact.some((redactPattern) => {
+      if (typeof redactPattern === 'string') {
+        return key === redactPattern
+      }
+      return redactPattern.test(key)
+    })
+  }
 })
+
+/**
+ * Check if value is a primitive
+ * @param value - value to check
+ * @return true if value is a primitive
+ */
+function isPrimitive(value: unknown): value is string | number | bigint | boolean {
+  return typeof value === 'string' ||
+      typeof value === 'number' ||
+      typeof value === 'bigint' ||
+      typeof value === 'boolean'
+}
 
 // Execute the action, if running as main module
 if (process.argv[1] === fileURLToPath(import.meta.url)) {

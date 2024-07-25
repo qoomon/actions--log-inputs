@@ -40711,22 +40711,15 @@ const action = () => run(async () => {
             eventInputs = github.context.payload.inputs;
     }
     if (eventInputs) {
-        lib_core.setOutput('inputs', eventInputs);
         lib_core.info('Inputs:');
         for (const [key, value] of Object.entries(eventInputs)) {
-            if (inputs.redact.some((redactPattern) => {
-                if (typeof redactPattern === 'string') {
-                    return key === redactPattern;
-                }
-                return redactPattern.test(key);
-            })) {
-                if (typeof value === 'string') {
-                    lib_core.setSecret(value);
-                }
-                else if (typeof value === 'number') {
+            if (key === '')
+                continue;
+            if (keyValueShouldBeRedacted(key)) {
+                lib_core.info(`  ${key}: ***`);
+                if (isPrimitive(value)) {
                     lib_core.setSecret(value.toString());
                 }
-                lib_core.info(`  ${key}: ***`);
             }
             else {
                 lib_core.info(`  ${key}: ${JSON.stringify(value)}`);
@@ -40737,7 +40730,31 @@ const action = () => run(async () => {
     else {
         lib_core.info('No inputs.');
     }
+    /**
+     * Check if key should be redacted
+     * @param key - key to check
+     * @return true if key should be redacted
+     */
+    function keyValueShouldBeRedacted(key) {
+        return inputs.redact.some((redactPattern) => {
+            if (typeof redactPattern === 'string') {
+                return key === redactPattern;
+            }
+            return redactPattern.test(key);
+        });
+    }
 });
+/**
+ * Check if value is a primitive
+ * @param value - value to check
+ * @return true if value is a primitive
+ */
+function isPrimitive(value) {
+    return typeof value === 'string' ||
+        typeof value === 'number' ||
+        typeof value === 'bigint' ||
+        typeof value === 'boolean';
+}
 // Execute the action, if running as main module
 if (process.argv[1] === (0,external_url_.fileURLToPath)(import.meta.url)) {
     action();
