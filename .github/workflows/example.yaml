@@ -15,7 +15,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: ./
+        id: inputs
         with:
           retract: /val.*/
       - run: echo ${{ toJson(inputs) }}
+      - run: echo ${{ toJson(steps.inputs.inputs) }}
 
