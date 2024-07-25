@@ -18,6 +18,6 @@ jobs:
         id: inputs
         with:
           retract: /val.*/
-      - run: echo ${{ toJson(inputs) }}
-      - run: echo ${{ toJson(steps.inputs.inputs) }}
+      - run: echo '${{ toJson(inputs) }}'
+      - run: echo '${{ toJson(steps.inputs.inputs) }}'
 
