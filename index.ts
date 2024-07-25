@@ -5,8 +5,8 @@ import {fileURLToPath} from 'url'
 
 export const action = () => run(async () => {
   const inputs = {
-    redact: core.getInput('redact')?.split(',')
-        ?.map((it) => it.trim())
+    redact: core.getInput('redact')
+        ?.split(/\s*[,\n]\s*/)
         ?.map((it) => {
           const regexMatch = it.match(/^\/(?<pattern>.+)\/(?<flags>[igmd]*)/)
           if (regexMatch) {
@@ -31,9 +31,7 @@ export const action = () => run(async () => {
     core.info('Inputs:')
     for (const [key, value] of Object.entries(eventInputs)) {
       if (inputs.redact.some((redactPattern) => {
-        if (typeof redactPattern === 'string') {
-          return key === redactPattern
-        }
+        if (typeof redactPattern === 'string') return key === redactPattern
         return redactPattern.test(key)
       })) {
         core.info(`  ${key}: ***`)
