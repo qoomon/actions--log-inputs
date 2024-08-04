@@ -1,4 +1,6 @@
-# GitHub Event Inputs Action
+# Event Inputs &nbsp; [![Actions](https://img.shields.io/badge/qoomon-GitHub%20Actions-blue)](https://github.com/qoomon/actions)
+
+This action logs workflow event input values.
 
 ## Usage
 ```yaml
